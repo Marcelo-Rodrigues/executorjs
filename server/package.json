@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "^4.16.2",
     "nedb": "^1.8.0",
+    "neo4j": "^2.0.0-RC2",
     "socketio": "^1.0.0"
   }
 }

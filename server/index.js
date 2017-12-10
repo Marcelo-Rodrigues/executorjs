@@ -2,9 +2,16 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var nedb = require('nedb');
+var neo4j = require('./neo');
 var db = new nedb({ filename: 'banco.db', autoload: true });
 
 var clients = {};
+
+app.get('/teste', function (req, res) {
+    neo4j.consultar('MATCH (ee:Person) WHERE ee.name = "Emil" RETURN ee;', function(result) {
+        res.send(result);
+    })
+});
 
 app.get('/', function (req, res) {
     res.send('server is running');
