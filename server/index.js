@@ -14,8 +14,14 @@ io.on('connection', (socket) => {
 
     socket.on("message", function (msg) {
 
+        let obj;
+        if(Array.isArray(msg)) {
+            obj = msg.length && msg[0] ? msg[0].msg : '';
+        } else {
+            obj = msg;
+        }
 
-        db.insert({ msg: msg }, function (err) {
+        db.insert({ msg: obj }, function (err) {
             if (err) return console.log(err); //caso ocorrer algum erro
             
             io.emit("message", db.getAllData());
@@ -23,6 +29,7 @@ io.on('connection', (socket) => {
         });
     });
 
+    io.emit("message", db.getAllData());
 });
 
 http.listen(3000, function () {

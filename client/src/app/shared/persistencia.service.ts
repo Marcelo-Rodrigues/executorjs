@@ -8,15 +8,17 @@ import 'rxjs/add/observable/fromEvent';
 export class PersistenciaService {
 
   private socket: SocketIOClient.Socket;
+  public readonly mensagem: Subject<{ msg: string }[]>;
 
-  connect(): Subject<MessageEvent> {
+  constructor() {
     this.socket = io(`http://localhost:3000`);
+    this.mensagem = this.obterControleEvento('message');
+  }
 
-    // We define our observable which will observe any incoming messages
-    // from our socket.io server.
-    const observable = new Observable(o => {
-      this.socket.on('message', (data) => {
-        console.log('Received message from Websocket Server');
+  private obterControleEvento(evento: string): Subject<any> {
+
+    const observavelMensagem = new Observable(o => {
+      this.socket.on(evento, (data) => {
         o.next(data);
       });
       return () => {
@@ -24,18 +26,13 @@ export class PersistenciaService {
       };
     });
 
-    // We define our Observer which will listen to messages
-    // from our other components and send messages back to our
-    // socket server whenever the `next()` method is called.
-    const observer = {
+    const observadorMensagem = {
       next: (data: Object) => {
-        this.socket.emit('message', JSON.stringify(data));
+        this.socket.emit(evento, data);
       },
     };
 
-    // we return our Rx.Subject which is a combination
-    // of both an observer and observable.
-    return Subject.create(observer, observable);
+    return Subject.create(observadorMensagem, observavelMensagem);
   }
 
 }
