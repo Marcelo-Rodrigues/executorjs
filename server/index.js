@@ -8,7 +8,7 @@ var db = new nedb({ filename: 'banco.db', autoload: true });
 var clients = {};
 
 app.get('/teste', function (req, res) {
-    neo4j.consultar('MATCH (ee:Person) WHERE ee.name = "Emil" RETURN ee;', function(result) {
+    neo4j.consultar('MATCH (ee:Person) WHERE ee.name = "Emil" RETURN ee;', function (result) {
         res.send(result);
     })
 });
@@ -17,27 +17,39 @@ app.get('/', function (req, res) {
     res.send('server is running');
 });
 
+var allClients = [];
+
 io.on('connection', (socket) => {
+    allClients.push(socket);
 
-    socket.on("message", function (msg) {
+    addEvent(socket, "test");
 
-        let obj;
-        if(Array.isArray(msg)) {
-            obj = msg.length && msg[0] ? msg[0].msg : '';
-        } else {
-            obj = msg;
-        }
+    socket.on('disconnect', function () {
+        io.emit('user disconnected');
 
-        db.insert({ msg: obj }, function (err) {
-            if (err) return console.log(err); //caso ocorrer algum erro
-            
-            io.emit("message", db.getAllData());
-            console.log("Novo msg adicionado!");
+        var i = allClients.indexOf(socket);
+        allClients.splice(i, 1);
+    });
+
+});
+
+
+function addEvent(socket, event) {
+    socket.on("new " + event, function (obj) {
+        obj.type = event;
+        db.insert(obj, function (err) {
+            if (err) return console.log(err);
+            io.emit("new " + event, obj);
         });
     });
 
-    io.emit("message", db.getAllData());
-});
+    socket.on("get all " + event + "s", function () {
+        db.find({ type: event }, function (err) {
+            if (err) return console.log(err);
+            socket.emit("all " + event, db.getAllData());
+        });
+    });
+}
 
 http.listen(3000, function () {
     console.log('listening on port 3000');

@@ -12,27 +12,26 @@ import { Subscription } from 'rxjs/Subscription';
 export class AppComponent {
   title = 'app';
   api;
-  msgs: string[];
+  msgs: string[] = [];
   codigo = '';
 
   private assinatura: Subscription;
 
   constructor(private persist: PersistenciaService) {
 
-    this.assinatura = this.persist.mensagem.subscribe((msgs) => {
-      console.log(msgs);
-      const newline = String.fromCharCode(13, 10);
-      // if (msgs.map) {
-      //   this.msgs = msgs.map(msg => msg.msg.replace(/\\n/g, newline).replace(/(^"|"$)/g, ''));
-      // } else {
-      this.msgs = msgs.map(msg => msg.msg);
-      // }
-      console.log(this.msgs);
-    });
+    this.persist.test.obterTodos().then(
+      (tests) => {
+        this.msgs = tests.map((test) => test.codigo);
+      });
+
+    this.persist.test.receberNovo.subscribe(
+      (test) => {
+        this.msgs.push(test.codigo);
+      });
   }
+
   executar() {
-    console.log('mandando', this.codigo);
-    this.persist.mensagem.next([{ msg: this.codigo }]);
+    this.persist.test.enviarNovo.next({ codigo: this.codigo });
     this.codigo = '';
   }
 }
